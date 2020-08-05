@@ -23,7 +23,7 @@ Aug, 2020 - We uploaded the code for 50salads, Breakfast and GTEA datasets, and 
 
 ### Training and Testing of BCN
 * All the following `DS` is `breakfast`, `50salads` or `gtea`, and `SP` is the split number (1-5) for 50salads and (1-4) for the other two datasets. 
-* For each dataset, we need to train a model of all the splits, and report the average performance on splits as the final result. We kindly remind that although the performance behavior on different splits varies a lot, we should still select the models of the same epoch for all splits.
+* For each dataset, we need to train a model of all the splits, and report the average performance on splits as the final result. We kindly remind that although the performance behavior on different splits varies a lot, we should still select the models of the same epoch for all splits in a specific dataset.
 
 #### 1. Training full-resolution barrier generation module
 
@@ -32,7 +32,7 @@ The best model of full BGM is for the initialization of BGM in joint-training. B
 python bgm.py --action train --dataset DS --split SP --resolution full
 ```
 
-We also provide trained full BGM model in `./models/bgm/full/DS/split_SP/bgm_best_f1.model` .
+We also provide trained full BGM model in `./bgm_models/full/DS/split_SP/bgm_best_f1.model` .
 
 #### 2. Training resized-resolution barrier generation module
 
@@ -41,7 +41,7 @@ The predicted boundary by best model of resized BGM is for the post-processing. 
 python bgm.py --action train --dataset DS --split SP --resolution resized
 ```
 
-We also provide trained full BGM model in `./models/bgm/resized/DS/split_SP/bgm_best_f1.model` .
+We also provide trained resized BGM model in `./bgm_models/resized/DS/split_SP/bgm_best_f1.model` .
 
 #### 3. Testing resized-resolution barrier generation module
 The predicted barriers (selected from boundary confidence scores) is saved in .csv file.
@@ -55,7 +55,10 @@ We will freeze the parameters of BGM for the first several epochs and jointly op
 python main.py --action train --dataset DS --split SP
 ```
 
+We also provide trained BCN model in `./models/DS/split_SP/epoch-best.model` .
+
 #### 5. Testing our BCN
+
 We directly provide the evaluation result of our final result after running
 ```
 python main.py --action test --dataset DS --split SP
@@ -63,7 +66,7 @@ python main.py --action test --dataset DS --split SP
 The final performance is made by the combination of Stage Cascade, 1 full-LBP and several times of resized-LBP as post-processing.
 
 #### 6.  Evaluation
-You can still evaluate again the performance of result predicted in step 5), by running `python eval.py --dataset=DS --split=SP`.
+You can still evaluate again the performance of result predicted in step 5) by running `python eval.py --dataset DS --split SP`, but it is not necessary.
 
 
 #### About the performance
