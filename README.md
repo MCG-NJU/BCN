@@ -4,7 +4,7 @@
 > Two proposed novel components: (1) stage cascade for boosting segmentation accuracy for hard frames (e.g., near action boundaries); and (2) local barrier pooling which uses boundary information for more smooth prediction and less over-segmentation errors.
 
 ### Visualization video
-
+To be done...
 
 ### Updates
 
@@ -32,8 +32,6 @@ The best model of full BGM is for the initialization of BGM in joint-training. B
 python bgm.py --action train --dataset DS --split SP --resolution full
 ```
 
-We also provide trained full BGM model in `./bgm_models/full/DS/split_SP/bgm_best_f1.model` .
-
 #### 2. Training resized-resolution barrier generation module
 
 The predicted boundary by best model of resized BGM is for the post-processing. The quality of boundary predicted by resized BGM is relatively better.
@@ -41,7 +39,7 @@ The predicted boundary by best model of resized BGM is for the post-processing. 
 python bgm.py --action train --dataset DS --split SP --resolution resized
 ```
 
-We also provide trained resized BGM model in `./bgm_models/resized/DS/split_SP/bgm_best_f1.model` .
+We also provide trained full and resized BGM model in [this mega link](https://mega.nz/file/CChHnLTY). Extract the zip file `bgm_model.zip` and put the `best_bgm_models` folder in the same directory as `main.py`.
 
 #### 3. Testing resized-resolution barrier generation module
 The predicted barriers (selected from boundary confidence scores) is saved in .csv file.
@@ -54,8 +52,7 @@ We will freeze the parameters of BGM for the first several epochs and jointly op
 ```
 python main.py --action train --dataset DS --split SP
 ```
-
-We also provide trained BCN model in `./models/DS/split_SP/epoch-best.model` .
+We also provide trained full and resized BGM model in [this mega link](https://mega.nz/file/mXhFRDqK). Extract the zip file `bcn_model.zip` and put the `best_models` folder in the same directory as `main.py`.
 
 #### 5. Testing our BCN
 
@@ -65,7 +62,7 @@ python main.py --action test --dataset DS --split SP
 ```
 The final performance is made by the combination of Stage Cascade, 1 full-LBP and several times of resized-LBP as post-processing.
 
-If you use our provided model, just run step 3) and 5) and you will get the evaluation.
+If you use our provided model, just run step 3) and 5) and you will get the evaluation. To use provided model, keep `use_saved_model=True` in both `main.py` and `bgm.py`.
 
 #### 6.  Evaluation
 You can still evaluate again the performance of result predicted in step 5) by running `python eval.py --dataset DS --split SP`, but it is not necessary. Our evaluation code follows [MS-TCN](https://github.com/yabufarha/ms-tcn).
