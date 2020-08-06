@@ -39,7 +39,7 @@ The predicted boundary by best model of resized BGM is for the post-processing. 
 python bgm.py --action train --dataset DS --split SP --resolution resized
 ```
 
-We also provide trained full and resized BGM model in [this mega link](https://mega.nz/file/CChHnLTY). Extract the zip file `bgm_model.zip` and put the `best_bgm_models` folder in the same directory as `main.py`.
+We also provide trained full and resized BGM model in [this mega link](https://mega.nz/file/CChHnLTY#Sr4pRdyAN2PMhTaQhbKfili5mFy9-ICXW9d-kyS-H4o). Extract the zip file `bgm_model.zip` and put the `best_bgm_models` folder in the same directory as `main.py`.
 
 #### 3. Testing resized-resolution barrier generation module
 The predicted barriers (selected from boundary confidence scores) is saved in .csv file.
@@ -52,7 +52,7 @@ We will freeze the parameters of BGM for the first several epochs and jointly op
 ```
 python main.py --action train --dataset DS --split SP
 ```
-We also provide trained full and resized BGM model in [this mega link](https://mega.nz/file/mXhFRDqK). Extract the zip file `bcn_model.zip` and put the `best_models` folder in the same directory as `main.py`.
+We also provide trained full and resized BGM model in [this mega link](https://mega.nz/file/GGoz3JRA#FsTyOATlWJ3oh7-fE7cmPw4GUsHpg_1Oz9BxBtrhLSQ). Extract the zip file `bcn_model.zip` and put the `best_models` folder in the same directory as `main.py`.
 
 #### 5. Testing our BCN
 
