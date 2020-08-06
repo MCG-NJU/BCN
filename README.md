@@ -65,12 +65,14 @@ python main.py --action test --dataset DS --split SP
 ```
 The final performance is made by the combination of Stage Cascade, 1 full-LBP and several times of resized-LBP as post-processing.
 
+If you use our provided model, just run step 3) and 5) and you will get the evaluation.
+
 #### 6.  Evaluation
-You can still evaluate again the performance of result predicted in step 5) by running `python eval.py --dataset DS --split SP`, but it is not necessary.
+You can still evaluate again the performance of result predicted in step 5) by running `python eval.py --dataset DS --split SP`, but it is not necessary. Our evaluation code follows [MS-TCN](https://github.com/yabufarha/ms-tcn).
 
 
 #### About the performance
-Limited by the size of temporal action segmentation datasets, the convergence of training procedure is not satisfied, where the performance difference between adjacent epochs may be larger than 1 point in all metrics  (especially for GTEA dataset). My empirical solution is evaluating all the saved models and selecting the epoch of best average performance. 
+Limited by the size of temporal action segmentation datasets, the convergence of training procedure is not satisfied, where the performance difference between adjacent epochs may be larger than 1 percent in all metrics  (especially for GTEA dataset). My empirical solution is evaluating all the saved models and selecting the epoch of best average performance. 
 
 Due to the random initialization, we think that the training result is good if the performance gap for most of metrics between your training result and the provided model is less than
 
