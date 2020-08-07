@@ -42,7 +42,7 @@ python bgm.py --action train --dataset DS --split SP --resolution resized
 We also provide trained full and resized BGM model in [this mega link](https://mega.nz/file/CChHnLTY#Sr4pRdyAN2PMhTaQhbKfili5mFy9-ICXW9d-kyS-H4o). Extract the zip file `bgm_model.zip` and put the `best_bgm_models` folder in the same directory as `main.py`.
 
 #### 3. Testing resized-resolution barrier generation module
-The predicted barriers (selected from boundary confidence scores) is saved in .csv file.
+The predicted barriers (selected from boundary confidence scores) is saved in .csv file. Note that we don't use resized LBP for post-processing for `gtea` dataset due to bad barrier quality caused by very small dataset size. But the performance gain in `50salads` and `breakfast` from resized LBP is quite satisfied.
 ```
 python bgm.py --action test --dataset DS --split SP --resolution resized
 ```
@@ -69,7 +69,7 @@ You can still evaluate again the performance of result predicted in step 5) by r
 
 
 #### About the performance
-Limited by the size of temporal action segmentation datasets, the convergence of training procedure is not satisfied, where the performance difference between adjacent epochs may be larger than 1 percent in all metrics  (especially for GTEA dataset). My empirical solution is evaluating all the saved models and selecting the epoch of best average performance. 
+Limited by the size of temporal action segmentation datasets, the convergence of training procedure is not satisfied, where the performance difference between adjacent epochs may be larger than 1 percent in all metrics  (especially for `GTEA` dataset) in many action segmentation methods including ours. My empirical solution is evaluating all the saved models and selecting the epoch of best average performance. 
 
 Due to the random initialization, we think that the training result is good if the performance gap for most of metrics between your training result and the provided model is less than
 
@@ -77,8 +77,7 @@ Due to the random initialization, we think that the training result is good if t
 * 0.8% in 50salads dataset
 * 2% in GTEA dataset
 
-It is also common if your result is better than the performance reported in our paper.
-
+Actually the performance reported in our paper is lower than our provided model for better reproducibility, because of unstable training process. It is common if your training result is better than ours.
 
 
 ### Citation:
