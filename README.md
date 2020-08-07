@@ -20,7 +20,7 @@ Aug, 2020 - We uploaded the code for 50salads, Breakfast and GTEA datasets, and 
 
 ### Download Datasets 
 
-* Download the [data](https://zenodo.org/record/3625992#.Xiv9jGhKhPY) provided by [MS-TCN](https://github.com/yabufarha/ms-tcn),  which contains the I3D (w/o fine-tune) features and the ground truth labels for 3 datasets. (~30GB)
+* Download the [data](https://zenodo.org/record/3625992#.Xiv9jGhKhPY) provided by [MS-TCN](https://github.com/yabufarha/ms-tcn),  which contains the I3D features (w/o fine-tune) and the ground truth labels for 3 datasets. (~30GB)
 * Extract it so that you have the `data` folder in the same directory as `main.py`.
 
 ### Training and Testing of BCN
