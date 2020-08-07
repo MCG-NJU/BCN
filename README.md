@@ -1,7 +1,9 @@
 # Boundary-Aware Cascade Networks for Temporal Action Segmentation
 > Pytorch implementation of Boundary-Aware Cascade Networks for Temporal Action Segmentation (ECCV 2020).
 >
-> Two proposed novel components: (1) stage cascade for boosting segmentation accuracy for hard frames (e.g., near action boundaries); and (2) local barrier pooling which uses boundary information for more smooth prediction and less over-segmentation errors.
+> Two proposed novel methods: (1) stage cascade for boosting segmentation accuracy for hard frames (e.g., near action boundaries); and (2) local barrier pooling which uses boundary information for more smooth prediction and less over-segmentation errors. Our unified framework BCN with these two complementary components outperforms previous SOTA by large margin.
+> 
+> Please visit our presentation video and slides in eccv website. Our slides is also available in `./demo/ECCV20-BCN.pdf`.
 
 ### Visualization video
 To be done...
