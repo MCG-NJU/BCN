@@ -3,7 +3,7 @@
 >
 > Two proposed novel methods: (1) stage cascade for boosting segmentation accuracy for hard frames (e.g., near action boundaries); and (2) local barrier pooling which uses boundary information for more smooth prediction and less over-segmentation errors. Our unified framework BCN with these two complementary components outperforms previous SOTA by large margin.
 > 
-> Please visit our presentation video and slides in eccv website. Our slides is also available in `./demo/ECCV20-BCN.pdf`.
+> Please visit our presentation video and slides in ECCV website. Our slides is also available in `./demo/ECCV20-BCN.pdf`.
 
 ### Visualization video
 To be done...
