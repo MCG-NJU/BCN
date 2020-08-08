@@ -82,7 +82,7 @@ Due to the random initialization, we think that the training result is good if t
 Actually the performance reported in our paper is lower than our provided model for better reproducibility, because of unstable training process. It is common if your training result is better than ours.
 
 
-### Citation:
+### Citation
 
 If you find our code useful, please cite our paper.
 
