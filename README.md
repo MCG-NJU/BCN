@@ -25,7 +25,7 @@ Aug, 2020 - We uploaded the code for 50salads, Breakfast and GTEA datasets, and 
 
 ### Training and Testing of BCN
 * All the following `DS` is `breakfast`, `50salads` or `gtea`, and `SP` is the split number (1-5) for 50salads and (1-4) for the other two datasets. 
-* For each dataset, we need to train a model of all the splits, and report the average performance on splits as the final result. We kindly remind that although the performance behavior on different splits varies a lot, we should still select the models of the same epoch for all splits in a specific dataset.
+* For each dataset, we need to train a model of all the splits, and report the average performance on splits as the final result.
 
 #### 1. Training full-resolution barrier generation module
 
@@ -50,7 +50,7 @@ python bgm.py --action test --dataset DS --split SP --resolution resized
 ```
 
 #### 4. Training our Stage Cascade  and BGM jointly
-We will freeze the parameters of BGM for the first several epochs and jointly optimize two modules until convergence. The performance displayed on screen and tensorboardX is only BCN without post-processing, which is **NOT** our final result.
+We will freeze the parameters of BGM for the first several epochs and jointly optimize two modules until convergence. Here we only use frame-wise classification loss and optimize BGM by backward gradients. The evaluation both on training and testing set will show on screen during training procedure.
 ```
 python main.py --action train --dataset DS --split SP
 ```
@@ -71,15 +71,15 @@ You can still evaluate again the performance of result predicted in step 5) by r
 
 
 #### About the performance
-Limited by the size of temporal action segmentation datasets, the convergence of training procedure is not satisfied, where the performance difference between adjacent epochs may be larger than 1 percent in all metrics  (especially for `GTEA` dataset) in many action segmentation methods including ours. My empirical solution is evaluating all the saved models and selecting the epoch of best average performance. 
+Limited by the size of temporal action segmentation datasets, the fluctuating training procedure makes the performance difference between adjacent epochs maybe larger than 1 percent in all metrics  (especially for `GTEA` dataset) in many action segmentation methods including ours. My empirical solution is evaluating all the saved models and selecting the epoch of best average performance (over splits). All the metrics are important and their behaviours are similar, so I tend to choose better F1-score because segmentation accuracy in our method is very stable.
 
 Due to the random initialization, we think that the training result is good if the performance gap for most of metrics between your training result and the provided model is less than
 
-* 0.3% in Breakfast dataset
-* 0.8% in 50salads dataset
+* 0.5% in Breakfast dataset
+* 1% in 50salads dataset
 * 2% in GTEA dataset
 
-Actually the performance reported in our paper is lower than our provided model for better reproducibility, because of unstable training process. It is common if your training result is better than ours.
+Actually the performance reported in our paper is lower than our provided model for better reproducibility because of unstable training process. It is common if your training result is better than ours.
 
 
 ### Citation
