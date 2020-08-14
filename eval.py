@@ -177,7 +177,7 @@ def eval_metric(dataset,list_of_videos,ground_truth_path,recog_path):
     acc=100 * float(correct) / total
     edit_result=(1.0 * edit) / len(list_of_videos)
     #print('Acc,     Edit,   F1@10,  F1@25,  F1@50')
-    print("[%.2f, %.2f" % (acc, edit_result), end='')
+    print("Testing set: [%.2f, %.2f" % (acc, edit_result), end='')
     for s in range(len(overlap)):
         precision = tp[s] / float(tp[s] + fp[s])
         recall = tp[s] / float(tp[s] + fn[s])
