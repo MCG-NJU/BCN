@@ -26,10 +26,10 @@ class Trainer:
         self.mse = nn.MSELoss(reduction='none')
         self.num_classes = num_classes
 
-    def train_bcn(self, save_dir, data_loader, vid_list_file_tst, num_epochs, learning_rate, device, date, num,checkpoint_path,
-                      results_dir, features_path,actions_dict, sample_rate,dataset,ground_truth_path,split):
+    def train_bcn(self, save_dir, data_loader,  num_epochs, learning_rate, device, date, num,checkpoint_path, results_dir, features_path,actions_dict, sample_rate, dataset,
+                  vid_list_file_tst, ground_truth_path, split, use_lbp, bgm_result_path, pooling_length, num_post=4):
 
-        writer = SummaryWriter('tensorboardX/run%s_%s_%s' % (date,num,split))
+        writer = SummaryWriter('tensorboardX/run%s_%s_%s' % (date, num, split))
         self.cascadeModel.train()
         self.cascadeModel.bgm.load_state_dict(torch.load(checkpoint_path + "/bgm_best_f1.model"))
         self.cascadeModel.to(device)
@@ -44,20 +44,20 @@ class Trainer:
         scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[30], gamma=0.3)
         if dataset=="gtea":
             scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[20], gamma=0.3)
-        # load features in memory, just for accelerate training, delete this if memory is not enough
+
+        lbp = LocalBarrierPooling(pooling_length, alpha=2)
+        lbp = lbp.to(device)
+        # load features of all test videos in memory, change it if not enough CPU memory
         inverse_dict = {v: k for k, v in actions_dict.items()}
         file_ptr = open(vid_list_file_tst, 'r')
-        list_of_vids = file_ptr.read().split('\n')[:-1]
+        list_of_vids_tst = file_ptr.read().split('\n')[:-1]
         file_ptr.close()
         all_test_feature = []
-        for vid in list_of_vids:
+        for vid in list_of_vids_tst:
             features = np.load(features_path + vid.split('.')[0] + '.npy')
-            features = features[:, :: sample_rate]
-            features = torch.tensor(features, dtype=torch.float)
-            features = features.unsqueeze_(0)
-            features=features.cpu()
+            features = torch.Tensor(features[:, :: sample_rate]).unsqueeze_(0).cpu()
             all_test_feature.append(features)
-
+        print("Testing set result format: Acc, Edit, F1@10, F1@25, F1@50")
         for epoch in range(num_epochs):
             self.cascadeModel.train()
             scheduler.step()
@@ -97,7 +97,7 @@ class Trainer:
                 # fusion stage
                 p = predictions[-1]
                 loss += torch.mean(self.nll(torch.log(p.transpose(2, 1).contiguous().view(-1, self.num_classes)), batch_target.view(-1)))
-                loss += 0.3 * torch.mean(torch.clamp(
+                loss += 0.5 * torch.mean(torch.clamp(
                     self.mse(F.log_softmax(p[:, :, 1:], dim=1), F.log_softmax(p.detach()[:, :, :-1], dim=1)), min=0,
                     max=8) * mask[:, :, 1:])
 
@@ -116,21 +116,17 @@ class Trainer:
                 correct += ((predicted == batch_target).float()*mask[:, 0, :].squeeze(1)).sum().item()
                 total += torch.sum(mask[:, 0, :]).item()
 
-            # save model
-            if epoch>=1*num_epochs/2-1 or epoch>=25:
-                torch.save(self.cascadeModel.state_dict(), save_dir + "/epoch-" + str(epoch + 1) + ".model")
-                #torch.save(optimizer.state_dict(), save_dir + "/epoch-" + str(epoch + 1) + ".opt")
 
             # statistics about training data
-            print("[epoch %d]: loss = %.3f, acc=%.3f ,lr=%.4f" % (
+            print("[epoch %d]: training loss = %.3f, training set acc=%.3f ,lr=%.4f" % (
                 epoch + 1, epoch_loss / len(data_loader), float(correct) / total, optimizer.param_groups[0]['lr']))
             num_iter=len(data_loader)-1
 
             if (precision + recall) > 0:
                 f1_score = 2 * (precision / (num_iter + 1)) * (recall / (num_iter + 1)) / ((precision / (num_iter + 1)) + (recall / (num_iter + 1)))
-                print("epoch %d: P=%.03f, R=%.03f, f1=%.3f" % (epoch +1 , precision / (num_iter + 1), recall / (num_iter + 1), f1_score))
+                print("BGM in training set: P=%.03f, R=%.03f, f1=%.3f" % (precision / (num_iter + 1), recall / (num_iter + 1), f1_score))
             else:
-                print("epoch %d: P=%.03f, R=%.03f" % (epoch +1 , precision / (num_iter + 1), recall / (num_iter + 1)))
+                print("BGM in training set: P=%.03f, R=%.03f" % ( precision / (num_iter + 1), recall / (num_iter + 1)))
             writer.add_scalar('Train_loss', epoch_loss / len(data_loader), epoch)
             writer.add_scalar('Train_Acc', float(correct) / total, epoch)
             writer.add_scalar('Train_BGM_Precision', precision / (num_iter + 1), epoch)
@@ -138,34 +134,66 @@ class Trainer:
 
             # statistics about testing data, used for selecting epochs
             self.cascadeModel.eval()
-            for i in range(len(list_of_vids)):
+            for i in range(len(list_of_vids_tst)):
+                vid = list_of_vids_tst[i]
                 input_x = all_test_feature[i]
-                input_x=input_x.to(device)
+                input_x = input_x.to(device)
                 mask = torch.ones(input_x.size(), device=device)
-                predictions, _, _ = self.cascadeModel(input_x, mask, gt_target=None,soft_threshold=0.8)
-                _, predicted = torch.max(predictions[-1].data, 1)
+                predictions, _, _ = self.cascadeModel(input_x, mask, gt_target=None, soft_threshold=0.8)
+                predictions=predictions[-1]
+                if use_lbp and dataset != "gtea":
+                    num_frames = np.shape(input_x)[2]
+                    barrier_file = bgm_result_path + vid + ".csv"
+                    barrier = pd.read_csv(barrier_file)
+                    barrier = np.transpose(np.array(barrier))
+                    temporal_scale = np.shape(barrier)[1]
+                    barrier = torch.Tensor(barrier)  # size=[1, num_frames]
+                    if temporal_scale < num_frames:
+                        interpolation = torch.round(torch.Tensor([float(num_frames) / temporal_scale * (i + 0.5) for i in range(temporal_scale)])).long()
+                        resize_barrier = torch.Tensor([0.0] * num_frames)
+                        resize_barrier[interpolation] = barrier[0]
+                        resize_barrier = resize_barrier.unsqueeze(0).unsqueeze(0)  # size=[1,1,num_frames]
+                    else:
+                        resize_barrier = barrier
+                        resize_barrier = resize_barrier.unsqueeze(0)  # size=[1,1,num_frames]
+                    resize_barrier = resize_barrier.to(device)
+                    if temporal_scale<num_frames:
+                        for i in range(num_post):
+                            predictions = lbp(predictions, resize_barrier)
+                    else:
+                        predictions=F.interpolate(predictions,size=temporal_scale, mode='linear',align_corners=False)
+                        for i in range(num_post):
+                            predictions = lbp(predictions, resize_barrier)
+                        predictions = F.interpolate(predictions, size=num_frames, mode='linear',align_corners=False)
+
+                _, predicted = torch.max(predictions.data, 1)
                 predicted = predicted.squeeze()
                 recognition = []
                 for k in range(len(predicted)):
                     recognition = np.concatenate((recognition, [inverse_dict[predicted[k].item()]] * sample_rate))
-                vid = list_of_vids[i]
                 f_name = vid.split('/')[-1].split('.')[0]
                 f_ptr = open(results_dir + "/" + f_name, "w")
                 f_ptr.write("### Frame level recognition: ###\n")
                 f_ptr.write(' '.join(recognition))
                 f_ptr.close()
-            test_acc, test_edit, test_f1 = eval_metric(dataset, list_of_vids, ground_truth_path, results_dir + "/")
+
+            test_acc, test_edit, test_f1 = eval_metric(dataset, list_of_vids_tst, ground_truth_path, results_dir + "/")
             writer.add_scalar('Test_Acc', test_acc, epoch)
             writer.add_scalar('Test_edit', test_edit, epoch)
             writer.add_scalar('Test_f1@10', test_f1[0], epoch)
             writer.add_scalar('Test_f1@25', test_f1[1], epoch)
             writer.add_scalar('Test_f1@50', test_f1[2], epoch)
 
-    def predict_bcn(self, model_dir, results_dir, features_path, vid_list_file, epoch, actions_dict,bgm_result_path,
-                        device,sample_rate,dataset,ground_truth_path, poolingLength,use_lbp,num_post=4):
+            # save model
+            if epoch >= 1 * num_epochs / 2 - 1 or epoch >= 25:
+                torch.save(self.cascadeModel.state_dict(), save_dir + "/epoch-" + str(epoch + 1) + ".model")
+                # torch.save(optimizer.state_dict(), save_dir + "/epoch-" + str(epoch + 1) + ".opt")
+
+    def predict_bcn(self, model_dir, results_dir, features_path, vid_list_file, epoch, actions_dict,bgm_result_path, device, sample_rate, dataset, ground_truth_path,
+                    pooling_length, use_lbp, num_post=4):
         self.cascadeModel.eval()
         inverse_dict={v: k for k, v in actions_dict.items()}
-        lbp = LocalBarrierPooling(poolingLength,alpha=2)
+        lbp = LocalBarrierPooling(pooling_length, alpha=2)
         lbp = lbp.to(device)
         with torch.no_grad():
             self.cascadeModel.to(device)
@@ -179,43 +207,36 @@ class Trainer:
                 features = features[:, ::sample_rate]
                 if use_lbp and dataset != "gtea":
                     num_frames = np.shape(features)[1]
-                    barrier_file=bgm_result_path+vid+ ".csv"
+                    barrier_file=bgm_result_path+ vid + ".csv"
                     barrier=pd.read_csv(barrier_file)
-                    barrier=np.array(barrier)
-                    temporal_scale=np.shape(barrier)[0]
-                    barrier=np.transpose(barrier)
                     #barrier = np.array([[0.0]*temporal_scale])  # avg_pooling
                     #barrier = np.array([[1.0]*temporal_scale])  # gaussian-like
-                    barrier = torch.tensor(barrier, dtype=torch.float)  # size=[num_frames]
-
+                    barrier = np.transpose(np.array(barrier))
+                    temporal_scale = np.shape(barrier)[1]
+                    barrier = torch.Tensor(barrier)  # size=[1, num_frames]
                     if temporal_scale<num_frames:
-                        interpolation = [float(num_frames) / temporal_scale * i for i in range(temporal_scale)]
-                        interpolation = np.array(interpolation)
-                        interpolation = interpolation + int(float(num_frames) / (2 * temporal_scale))
-                        interpolation = np.round(interpolation)
-                        interpolation = interpolation.astype(np.int)
-                        resize_barrier = torch.tensor([0.0]*num_frames)
-                        resize_barrier[interpolation]= barrier
-                        #resize_barrier = F.interpolate(barrier, size=num_frames, mode='nearest')
+                        interpolation = torch.round(torch.Tensor([float(num_frames) / temporal_scale * (i+0.5) for i in range(temporal_scale)])).long()
+                        resize_barrier = torch.Tensor([0.0]*num_frames)
+                        resize_barrier[interpolation]= barrier[0]
+                        resize_barrier = resize_barrier.unsqueeze(0).unsqueeze(0)  # size=[1,1,num_frames]
                     else:
-                        resize_barrier=barrier
-                    resize_barrier = resize_barrier.unsqueeze(0).unsqueeze(0) # size=[1,1,num_frames]
+                        resize_barrier = barrier
+                        resize_barrier = resize_barrier.unsqueeze(0)  # size=[1,1,num_frames]
                     resize_barrier=resize_barrier.to(device)
 
-                input_x = torch.tensor(features, dtype=torch.float)
+                input_x = torch.Tensor(features)
                 input_x.unsqueeze_(0)
                 input_x = input_x.to(device)
-                mask=torch.ones(input_x.size(), device=device)
+                mask = torch.ones(input_x.size(), device=device)
 
                 predictions, BGM_output, _ = self.cascadeModel(input_x, mask, gt_target=None,soft_threshold=0.8)
-                predictions=predictions[-1]
+                predictions = predictions[-1]
                 if use_lbp and dataset != "gtea":
                     if temporal_scale<=num_frames:
                         for i in range(num_post):
                             predictions = lbp(predictions, resize_barrier)
                     else:
                         predictions=F.interpolate(predictions,size=temporal_scale, mode='linear',align_corners=False)
-                        resize_barrier = resize_barrier.squeeze(0)
                         for i in range(num_post):
                             predictions = lbp(predictions, resize_barrier)
                         predictions = F.interpolate(predictions, size=num_frames, mode='linear',align_corners=False)

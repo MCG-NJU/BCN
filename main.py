@@ -13,9 +13,9 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--action', default='test')
+parser.add_argument('--action', default='train')
 parser.add_argument('--dataset', default="50salads")
-parser.add_argument('--split', default='4')
+parser.add_argument('--split', default='2')
 parser.add_argument("--date", help="today", type=str,default='0804')
 parser.add_argument("--num", help="how many times do you train today? It is only used for TensorBoardX", type=str,default='1')
 args = parser.parse_args()
@@ -31,7 +31,7 @@ num_soft_lbp=1 # number of soft lbp embedded in BCN
 
 
 # shared hyper-parameters
-bz = 1 # batch size
+bz = 1 # batch size, currently only support 1
 features_dim = 2048
 num_stages = 4 # total stages for SC: num_stages-1 cascade stages and 1 fusion stage; or number of stages for MS-TCN
 
@@ -47,11 +47,11 @@ if use_mstcn==False:
     num_layers = 12
     num_f_maps = 256
     lr = 0.001
-    num_epochs = 40
+    num_epochs = 50
     test_epochs = 36
     if args.dataset == "breakfast":
         lr = 0.0005
-        num_epochs = 40
+        num_epochs = 50
         test_epochs = 30
     if args.dataset == "gtea":
         num_layers = 10
@@ -90,6 +90,7 @@ if not os.path.exists(results_dir):
 
 if use_saved_model:
     model_dir = "./best_models/" + args.dataset + "/split_" + args.split
+    bgm_model_path = "./best_bgm_models/full/" + args.dataset + "/split_" + args.split
     test_epochs = "best"
 
 file_ptr = open(mapping_file, 'r')
@@ -103,18 +104,19 @@ num_classes = len(actions_dict)
 trainer = Trainer(num_stages, num_layers, num_f_maps, features_dim, num_classes,args.dataset,device,use_lbp,num_soft_lbp)
 if args.action == "train":
     if use_mstcn==False:
-        train_loader = torch.utils.data.DataLoader(VideoBoundaryDataset(vid_list_file,num_classes, actions_dict, gt_path, features_path, sample_rate,args.dataset,device),
+        train_loader = torch.utils.data.DataLoader(VideoBoundaryDataset(vid_list_file, num_classes, actions_dict, gt_path, features_path, sample_rate, args.dataset, device),
                                                    batch_size=bz, shuffle=True,
                                                    num_workers=2, pin_memory=True, drop_last=True)
-        trainer.train_bcn(model_dir, train_loader, vid_list_file_tst, num_epochs, lr, device, args.date, args.num, bgm_model_path,
-                              results_dir, features_path, actions_dict, sample_rate, args.dataset, gt_path,args.split)
+        trainer.train_bcn(model_dir, train_loader, num_epochs, lr, device, args.date, args.num, bgm_model_path, results_dir, features_path, actions_dict, sample_rate, args.dataset,
+                          vid_list_file_tst, gt_path, args.split, use_lbp, bgm_result_path, lbp_post_length, num_post=num_post)
     else:
         batch_gen = BatchGenerator(num_classes, actions_dict, gt_path, features_path, sample_rate)
         batch_gen.read_data(vid_list_file)
-        trainer.train_mstcn(model_dir, batch_gen, num_epochs=num_epochs, batch_size=bz, learning_rate=lr, device=device,date=args.date,num=args.num)
+        trainer.train_mstcn(model_dir, batch_gen, num_epochs=num_epochs, batch_size=bz, learning_rate=lr, device=device, date=args.date, num=args.num)
 
 if args.action == "test":
     if use_mstcn==False:
-        trainer.predict_bcn(model_dir, results_dir, features_path, vid_list_file_tst, test_epochs, actions_dict,bgm_result_path, device, sample_rate,args.dataset,gt_path,lbp_post_length,use_lbp,num_post=num_post)
+        trainer.predict_bcn(model_dir, results_dir, features_path, vid_list_file_tst, test_epochs, actions_dict, bgm_result_path, device, sample_rate, args.dataset, gt_path,
+                            lbp_post_length, use_lbp, num_post=num_post)
     else:
-        trainer.predict_mstcn(model_dir, results_dir, features_path, vid_list_file_tst, test_epochs, actions_dict,device, sample_rate,bgm_result_path,mstcn_use_lbp,lbp_post_length)
+        trainer.predict_mstcn(model_dir, results_dir, features_path, vid_list_file_tst, test_epochs, actions_dict,device, sample_rate, bgm_result_path, mstcn_use_lbp, lbp_post_length)
