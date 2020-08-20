@@ -71,7 +71,7 @@ You can still evaluate again the performance of result predicted in step 5) by r
 
 
 #### About the performance
-Limited by the size of temporal action segmentation datasets, the fluctuating training procedure makes the performance difference between adjacent epochs maybe larger than 1 percent in all metrics  (especially for `GTEA` dataset) in many action segmentation methods including ours. My empirical solution is evaluating all the saved models and selecting the epoch of best average performance (over splits). All the metrics are important and their behaviours are similar, so I tend to choose better F1-score because segmentation accuracy in our method is very stable.
+Limited by the size of temporal action segmentation datasets, the fluctuating training procedure makes the performance gap between adjacent epochs even larger than 1 percent in all metrics  (especially for `GTEA` dataset) in many action segmentation methods including ours. My empirical solution is evaluating all the saved models and selecting the epoch of best average performance (over splits). All the metrics are important and their behaviours are similar, so I tend to choose the epoch of better F1-score for relatively stable segmentation accuracy in our method.
 
 Due to the random initialization, we think that the training result is good if the performance gap for most of metrics between your training result and the provided model is less than
 
