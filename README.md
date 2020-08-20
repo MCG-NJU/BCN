@@ -84,7 +84,7 @@ Actually the performance reported in our paper is lower than our provided model 
 
 ### Citation
 
-If you find our code useful, please cite our paper.
+If you find our code useful, please cite our paper. (bibtex to be done...)
 
 ### Contact
 
@@ -95,4 +95,4 @@ Zhenzhi Wang: zhenzhiwang@outlook.com
 ```
 ### Acknowledgement
 
-We appreciate [MS-TCN](https://github.com/yabufarha/ms-tcn) for extracted I3D feature, and codes for backbone model and evaluation. 
+We appreciate [MS-TCN](https://github.com/yabufarha/ms-tcn) for extracted I3D feature, backbone network and evaluation code. 
