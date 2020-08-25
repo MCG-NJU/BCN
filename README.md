@@ -25,7 +25,7 @@ Aug, 2020 - We uploaded the code for 50salads, Breakfast and GTEA datasets, and 
 
 ### Training and Testing of BCN
 * All the following `DS` is `breakfast`, `50salads` or `gtea`, and `SP` is the split number (1-5) for 50salads and (1-4) for the other two datasets. 
-* For each dataset, we need to train a model of all the splits, and report the average performance on splits as the final result.
+* For each dataset, we need to train a model for each split (n-1 for training, 1 for test), and report the average performance on splits as the final result.
 
 #### 1. Training full-resolution barrier generation module
 
