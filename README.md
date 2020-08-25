@@ -29,19 +29,19 @@ Aug, 2020 - We uploaded the code for 50salads, Breakfast and GTEA datasets, and 
 
 #### 1. Training full-resolution barrier generation module
 
-The best model of full BGM is for the initialization of BGM in joint-training. By our experiment, only full-resolution BGM can be used for joint-training.
+The pre-trained model of full BGM is for the initialization of BGM in joint-training. By our experiment results, only full-resolution BGM can work for joint-training, but you can still try resized one.
 ```
 python bgm.py --action train --dataset DS --split SP --resolution full
 ```
 
 #### 2. Training resized-resolution barrier generation module
 
-The predicted boundary by best model of resized BGM is for the post-processing. The quality of boundary predicted by resized BGM is relatively better.
+The predicted boundary by pre-trained model of resized BGM is for post-processing. The quality of boundary predicted by resized BGM is slightly better than full BGM.
 ```
 python bgm.py --action train --dataset DS --split SP --resolution resized
 ```
 
-We also provide trained full and resized BGM model in [this mega link](https://mega.nz/file/CChHnLTY#Sr4pRdyAN2PMhTaQhbKfili5mFy9-ICXW9d-kyS-H4o). Extract the zip file `bgm_model.zip` and put the `best_bgm_models` folder in the same directory as `main.py`.
+We also provide trained full and resized BGM model in [this mega link](https://mega.nz/file/CChHnLTY#Sr4pRdyAN2PMhTaQhbKfili5mFy9-ICXW9d-kyS-H4o). Extract the zip file `bgm_model.zip` and put the `best_bgm_models` folder in the same directory as `main.py`. We select best BGM model by f1 score computed by boundary classification precision and recall.
 
 #### 3. Testing resized-resolution barrier generation module
 The predicted barriers (selected from boundary confidence scores) is saved in .csv file. Note that we don't use resized LBP for post-processing for `gtea` dataset due to bad barrier quality caused by very small dataset size. But the performance gain in `50salads` and `breakfast` from resized LBP is quite satisfied.
@@ -50,7 +50,7 @@ python bgm.py --action test --dataset DS --split SP --resolution resized
 ```
 
 #### 4. Training our Stage Cascade  and BGM jointly
-We will freeze the parameters of BGM for the first several epochs and jointly optimize two modules until convergence. Here we only use frame-wise classification loss and optimize BGM by backward gradients. The evaluation both on training and testing set will show on screen during training procedure.
+We will freeze the parameters of BGM for the first several epochs and then jointly optimize two modules until convergence. Here we only use frame-wise classification loss and optimize BGM by backward gradients. The evaluation both on training and testing set will show on screen during training procedure.
 ```
 python main.py --action train --dataset DS --split SP
 ```
