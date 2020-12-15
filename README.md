@@ -84,7 +84,24 @@ Actually the performance reported in our paper is lower than our provided model 
 
 ### Citation
 
-If you find our code useful, please cite our paper. (bibtex to be done...)
+If you find our code useful, please cite our paper. 
+
+```
+@inproceedings{DBLP:conf/eccv/WangGWLW20,
+  author    = {Zhenzhi Wang and
+               Ziteng Gao and
+               Limin Wang and
+               Zhifeng Li and
+               Gangshan Wu},
+  title     = {Boundary-Aware Cascade Networks for Temporal Action Segmentation},
+  booktitle = {{ECCV} {(25)}},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {12370},
+  pages     = {34--51},
+  publisher = {Springer},
+  year      = {2020}
+}
+```
 
 ### Contact
 
