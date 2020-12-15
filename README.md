@@ -5,9 +5,6 @@
 > 
 > Please visit our presentation video and slides in ECCV website. Our slides is also available in `./demo/ECCV20-BCN.pdf`.
 
-### Visualization video
-To be done...
-
 ### Updates
 
 Aug, 2020 - We uploaded the code for 50salads, Breakfast and GTEA datasets, and the corresponding models for inference.
